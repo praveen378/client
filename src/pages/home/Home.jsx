@@ -65,7 +65,7 @@ const Home = () => {
   // Setup PeerJS
   useEffect(() => {
     const newPeer = new Peer(undefined, {
-      host: "backend-production-0f54.up.railway.app/",
+      host: "backend-production-0f54.up.railway.app",
       port: 443,
       path: "/peerjs",
       secure: true,
