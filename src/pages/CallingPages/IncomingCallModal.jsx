@@ -8,7 +8,7 @@ const IncomingCallModal = () => {
   const dispatch = useDispatch();
   const { socket } = useSelector((state) => state.socketReducer);
   const { incomingCall } = useSelector((state) => state.callSlice);
-  const { userProfile } = useSelector((state) => state.authReducer);
+ 
 
   if (!incomingCall) return null;
 
