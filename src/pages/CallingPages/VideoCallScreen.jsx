@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setCallAccepted,
@@ -15,6 +15,7 @@ const VideoCallScreen = () => {
   const dispatch = useDispatch();
   const { peer, setPeer } = usePeer();
   const [remoteStream, setRemoteStream] = useState(null);
+  const calleeId = useSelector((state) => state.callReducer.calleeId);
 
   const { socket } = useSelector((state) => state.socketReducer);
   const incomingCall = useSelector((state) => state.callReducer.incomingCall);
@@ -27,7 +28,10 @@ const VideoCallScreen = () => {
   useEffect(() => {
     if (userVideo.current && remoteStream) {
       console.log("🎯 Attaching remote stream to video element");
-      console.log("✅ Remote stream video tracks:", remoteStream.getVideoTracks());
+      console.log(
+        "✅ Remote stream video tracks:",
+        remoteStream.getVideoTracks()
+      );
       console.log("🚨 Remote stream is active:", remoteStream.active);
 
       setTimeout(() => {
@@ -57,7 +61,9 @@ const VideoCallScreen = () => {
           myVideo.current
             .play()
             .then(() => console.log("✅ Local video playing"))
-            .catch((err) => console.error("❌ Error playing local video:", err));
+            .catch((err) =>
+              console.error("❌ Error playing local video:", err)
+            );
         }
 
         console.log("📷 My local stream tracks:", stream.getTracks());
@@ -77,7 +83,7 @@ const VideoCallScreen = () => {
             console.log("📤 Emitting callUser with signal:", data);
             socket.emit("callUser", {
               signalData: data,
-              toUserId: incomingCall?.from,
+              toUserId: calleeId,
               fromUserId: socket.id,
               name: "Caller",
             });
