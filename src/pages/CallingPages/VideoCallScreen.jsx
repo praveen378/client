@@ -1,14 +1,4 @@
- import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  setCallAccepted,
-  setIncomingCall,
-  setCalling,
-  isCallerSelector,
-} from "../store/socket/call.slice";
-import { usePeer } from "../../context/PeerContext";
-import { useNavigate } from "react-router-dom";
-import SimplePeer from "simple-peer/simplepeer.min.js";
+ // ...imports remain the same
 
 const VideoCallScreen = () => {
   const navigate = useNavigate();
@@ -136,6 +126,32 @@ const VideoCallScreen = () => {
       setPeer(null);
     };
   }, [isCaller]);
+
+  // ✅ Add this block below peer setup
+  useEffect(() => {
+    if (!socket) return;
+
+    // Show confirmation that the call was accepted
+    socket.on("callAcceptedStatus", ({ accepted }) => {
+      console.log("✅ Call was accepted by receiver");
+      // Optionally show a UI indicator
+    });
+
+    socket.on("callRejectedStatus", ({ accepted }) => {
+      console.log("❌ Call was rejected by receiver");
+
+      // Cleanup and navigate home or show "Call rejected" UI
+      dispatch(setCalling(false));
+      dispatch(setCallAccepted(false));
+      setPeer(null);
+      navigate("/", { replace: true });
+    });
+
+    return () => {
+      socket.off("callAcceptedStatus");
+      socket.off("callRejectedStatus");
+    };
+  }, [socket]);
 
   const handleEndCall = () => {
     if (peer) peer.destroy();
