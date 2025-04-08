@@ -29,13 +29,24 @@ const UserTopHeader = ({ userDetails }) => {
   
       dispatch(setCalling(true)); // Update global call state
   
-       const newPeer = new SimplePeer({
+         const newPeer = new SimplePeer({
         initiator: true,
         trickle: false,
         stream,
         config: {
           iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: "stun:stun.l.google.com:19302" },
+            {
+              urls: "turn:relay.example.com:3478",
+              username: "user",
+              credential: "pass",
+            },
+
+            // You can add TURN servers here later for NAT traversal
+          ],
+        },
+      });
+
             // You can add TURN servers here later for NAT traversal
           ],
         },
