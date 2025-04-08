@@ -1,17 +1,16 @@
-import React, { use, useEffect } from "react";
+  import React, { use, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from "../store/user/user.slice";
-import { setCalling } from "../store/socket/call.slice";
+import { setCalling, setPeer } from "../store/socket/call.slice";
 import { usePeer } from "../../context/PeerContext";
-
+import SimplePeer from "simple-peer/simplepeer.min.js"; // ✅ Add this line
 const UserTopHeader = ({ userDetails }) => {
   const dispatch = useDispatch();
   const { selectedUser, userProfile } = useSelector(
     (state) => state.userReducer
   );
-
+  const { peer, setPeer } = usePeer();
   const { onlineUsers, socket } = useSelector((state) => state.socketReducer);
-  const { peer } = usePeer(); // ⬅️ Get peer from context
 
   const isActive = selectedUser?._id === userDetails?._id;
 
@@ -25,36 +24,46 @@ const UserTopHeader = ({ userDetails }) => {
         video: true,
         audio: true,
       });
-
-      if (!peer || !stream) {
-        alert("Failed to initialize peer or get media stream");
-        return;
-      }
-
+  
+      console.log("📹 Got media stream:", stream);
+  
       dispatch(setCalling(true)); // Update global call state
-
-      const call = peer.call(userDetails._id, stream);
-
-      call.on("stream", (remoteStream) => {
+  
+      const newPeer = new SimplePeer({
+        initiator: true,
+        trickle: false,
+        stream: stream,
+      });
+  
+      newPeer.on("signal", (data) => {
+        console.log("📡 Emitting callUser with signal data...");
+        socket.emit("callUser", {
+          toUserId: userDetails._id,
+          signalData: data,
+          fromUserId: userProfile.profile._id,
+          name: userProfile.profile.fullName,
+        });
+      });
+  
+      newPeer.on("stream", (remoteStream) => {
+        console.log("🎥 Received remote stream");
         const remoteVideo = document.getElementById("remote-video");
         if (remoteVideo) {
           remoteVideo.srcObject = remoteStream;
         }
       });
-
-      // Notify the other user
-      socket.emit("callUser", {
-        toUserId: userDetails._id,
-        signalData: null, // We’ll handle this through PeerJS
-        fromUserId: userProfile.profile._id,
-        name: userProfile.profile.fullName,
+  
+      newPeer.on("error", (err) => {
+        console.error("❌ Peer error:", err);
       });
+  
+      setPeer(newPeer);
     } catch (error) {
       console.error("⚠️ Call error:", error);
       alert("Please allow camera and microphone permissions.");
     }
   };
-
+  
   // Optional: handle socket response to accepted call
   useEffect(() => {
     if (!socket) return;
