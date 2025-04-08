@@ -1,4 +1,4 @@
-import React from "react";
+ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCallAccepted, setIncomingCall } from "../store/socket/call.slice";
 import Peer from "simple-peer";
@@ -28,11 +28,6 @@ const IncomingCallModal = () => {
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-             {
-              urls: "turn:relay.example.com:3478",
-              username: "user",
-              credential: "pass",
-            },
           ],
         },
       });
