@@ -20,7 +20,8 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
+     sourcemap: true,
+     rollupOptions: {
       plugins: [rollupNodePolyFill()],
     },
   },
