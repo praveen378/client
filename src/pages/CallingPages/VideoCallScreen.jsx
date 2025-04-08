@@ -87,7 +87,8 @@ const VideoCallScreen = () => {
 
         newPeer.on("close", () => {
           dispatch(setCallAccepted(false));
-          dispatch(setPeer(null));
+          setPeer(null); // ✅ don't dispatch context functions
+
           dispatch(setIncomingCall(null));
         });
 
