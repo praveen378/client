@@ -26,14 +26,17 @@ const VideoCallScreen = () => {
   // Attach remote stream to video element
   useEffect(() => {
     if (userVideo.current && remoteStream) {
-      userVideo.current.srcObject = remoteStream;
+      console.log("🎯 Attaching remote stream to video element");
+      console.log("✅ Remote stream video tracks:", remoteStream.getVideoTracks());
+      console.log("🚨 Remote stream is active:", remoteStream.active);
 
-      userVideo.current
-        .play()
-        .then(() => console.log("✅ Remote video playing"))
-        .catch((err) =>
-          console.error("❌ Error auto-playing remote video:", err)
-        );
+      setTimeout(() => {
+        userVideo.current.srcObject = remoteStream;
+        userVideo.current
+          .play()
+          .then(() => console.log("✅ Delayed remote video playing"))
+          .catch((err) => console.error("❌ Delayed play error:", err));
+      }, 500);
     }
   }, [remoteStream]);
 
@@ -51,9 +54,10 @@ const VideoCallScreen = () => {
         // Show local stream
         if (myVideo.current) {
           myVideo.current.srcObject = stream;
-          myVideo.current.play().catch((err) =>
-            console.error("Error playing local video:", err)
-          );
+          myVideo.current
+            .play()
+            .then(() => console.log("✅ Local video playing"))
+            .catch((err) => console.error("❌ Error playing local video:", err));
         }
 
         console.log("📷 My local stream tracks:", stream.getTracks());
@@ -151,7 +155,16 @@ const VideoCallScreen = () => {
           playsInline
           className="absolute bottom-6 right-6 w-40 h-40 rounded-lg border-2 border-white shadow-lg z-10"
         />
+
+        {/* 🐞 Debug Overlay */}
+        <div className="absolute bottom-4 left-4 text-white text-sm z-50 bg-black/70 p-2 rounded">
+          <p>📡 isCaller: {String(isCaller)}</p>
+          <p>📞 Call from: {incomingCall?.from}</p>
+          <p>🎥 Remote stream: {remoteStream ? "Yes" : "No"}</p>
+          <p>🎬 Tracks: {remoteStream?.getTracks()?.length ?? 0}</p>
+        </div>
       </div>
+
       <div className="p-4 flex justify-center gap-6 bg-gray-800">
         <button
           onClick={handleEndCall}
