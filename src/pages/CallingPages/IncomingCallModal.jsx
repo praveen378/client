@@ -1,4 +1,4 @@
-import React from "react";
+ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCallAccepted, setIncomingCall } from "../store/socket/call.slice";
 import Peer from "simple-peer";
@@ -7,7 +7,8 @@ const IncomingCallModal = () => {
   const { peer, setPeer } = usePeer(); // ✅ get peer from context
   const dispatch = useDispatch();
   const { socket } = useSelector((state) => state.socketReducer);
-  const { incomingCall } = useSelector((state) => state.callReducer);
+  const incomingCall = useSelector((state) => state.callReducer?.incomingCall);
+
   // const { userProfile } = useSelector((state) => state.authReducer);
 
   console.log("Incoming call:", incomingCall);
@@ -21,6 +22,16 @@ const IncomingCallModal = () => {
           initiator: false,
           trickle: false,
           stream: stream,
+          config: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              {
+                urls: "turn:your-turn-server.com:3478",
+                username: "yourUsername",
+                credential: "yourCredential",
+              },
+            ],
+          },
         });
 
         newPeer.on("signal", (signal) => {
