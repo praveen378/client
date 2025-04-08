@@ -1,7 +1,7 @@
   import React, { use, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from "../store/user/user.slice";
-import { setCalling, setPeer } from "../store/socket/call.slice";
+import { setCalling } from "../store/socket/call.slice";
 import { usePeer } from "../../context/PeerContext";
 import SimplePeer from "simple-peer/simplepeer.min.js"; // ✅ Add this line
 const UserTopHeader = ({ userDetails }) => {
