@@ -1,7 +1,7 @@
  // IncomingCallModal.jsx
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCallAccepted } from "../store/socket/call.slice";
+import { setCallAccepted, setCalleeId, setCalling } from "../store/socket/call.slice";
 import { useNavigate } from "react-router-dom";
 
 const IncomingCallModal = () => {
@@ -14,7 +14,9 @@ const IncomingCallModal = () => {
 
   const handleAccept = () => {
     dispatch(setCallAccepted(true));
+    dispatch(setCalling(true));
     navigate("/call", { replace: true });
+    dispatch(setCalleeId(incomingCall.from)); // Make sure `from` is the correct ID
   };
 
   const handleReject = () => {
