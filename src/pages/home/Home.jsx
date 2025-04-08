@@ -77,48 +77,12 @@ const Home = () => {
       newPeer.destroy(); // ✅ Cleanup
     };
   }, []);
-
-  // Handle incoming call
+//handling call
   useEffect(() => {
     if (!socket) return;
-
     socket.on("incomingCall", async ({ from, signal, name }) => {
       dispatch(setIncomingCall({ from, signal, name }));
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        setLocalStream(stream);
-
-        const peerInstance = new SimplePeer({
-          initiator: false,
-          trickle: false,
-          stream,
-        });
-
-        peerInstance.signal(signal);
-
-        peerInstance.on("signal", (signalData) => {
-          socket.emit("answerCall", {
-            to: from,
-            signal: signalData,
-          });
-        });
-
-        peerInstance.on("stream", (remoteStream) => {
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-          }
-        });
-
-        setPeer(peerInstance);
-      } catch (err) {
-        console.error("Error getting user media", err);
-      }
     });
-
     return () => {
       socket.off("incomingCall");
     };
