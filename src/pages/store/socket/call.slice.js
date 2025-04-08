@@ -1,20 +1,19 @@
-// call.slice.js
+ // call.slice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  
   calling: false,
   receivingCall: false,
   callAccepted: false,
   callerInfo: null,
   incomingCall: null, // <-- add this if not present
+  calleeId: null, // <-- add this if not present
 };
 
-const callSlice = createSlice({
+const callReducer = createSlice({
   name: "call",
   initialState,
   reducers: {
- 
     setCalling: (state, action) => {
       state.calling = action.payload;
     },
@@ -32,21 +31,22 @@ const callSlice = createSlice({
       state.incomingCall = action.payload;
       state.receivingCall = !!action.payload;
     },
+    setCalleeId: (state, action) => {
+      state.calleeId = action.payload;
+    },
   },
 });
 
 export const {
-   
   setCalling,
   setReceivingCall,
   setCallAccepted,
   setCallerInfo,
   setIncomingCall,
-} = callSlice.actions;
- export const isCallerSelector = (state) => {
-  const slice = state.callReducer;
-  if (!slice) return false;
-  return slice.calling && !slice.receivingCall;
-};
+  setCalleeId,
+} = callReducer.actions;
 
-export default callSlice.reducer;
+export const isCallerSelector = (state) =>
+  state.callReducer.calling && !state.callReducer.receivingCall;
+
+export default callReducer.reducer;
