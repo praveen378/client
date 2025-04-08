@@ -75,6 +75,7 @@ const VideoCallScreen = () => {
     }
 console.log("End call button clicked");
     dispatch(setCallAccepted(false));
+     dispatch(setCalling(false)); // Update global call state
     setPeer(null); // ✅ this is from context, don't dispatch it
     navigate("/", { replace: true });
   };
