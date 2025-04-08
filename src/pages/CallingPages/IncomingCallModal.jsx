@@ -3,6 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCallAccepted, setIncomingCall } from "../store/socket/call.slice";
 import Peer from "simple-peer";
 import { usePeer } from "../../context/PeerContext";
+// ✅ Correct way
+import SimplePeer from "simple-peer/simplepeer.min.js";
+
 const IncomingCallModal = () => {
   const { peer, setPeer } = usePeer(); // ✅ get peer from context
   const dispatch = useDispatch();
