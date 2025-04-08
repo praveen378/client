@@ -1,4 +1,4 @@
-  import React, { use, useEffect } from "react";
+ import React, { use, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from "../store/user/user.slice";
 import { setCalling } from "../store/socket/call.slice";
@@ -24,12 +24,12 @@ const UserTopHeader = ({ userDetails }) => {
         video: true,
         audio: true,
       });
-  
+
       console.log("📹 Got media stream:", stream);
-  
+
       dispatch(setCalling(true)); // Update global call state
-  
-         const newPeer = new SimplePeer({
+
+      const newPeer = new SimplePeer({
         initiator: true,
         trickle: false,
         stream,
@@ -47,11 +47,6 @@ const UserTopHeader = ({ userDetails }) => {
         },
       });
 
-            // You can add TURN servers here later for NAT traversal
-          ],
-        },
-      });
-  
       newPeer.on("signal", (data) => {
         console.log("📡 Emitting callUser with signal data...");
         socket.emit("callUser", {
@@ -61,7 +56,7 @@ const UserTopHeader = ({ userDetails }) => {
           name: userProfile.profile.fullName,
         });
       });
-  
+
       newPeer.on("stream", (remoteStream) => {
         console.log("🎥 Received remote stream");
         const remoteVideo = document.getElementById("remote-video");
@@ -69,18 +64,18 @@ const UserTopHeader = ({ userDetails }) => {
           remoteVideo.srcObject = remoteStream;
         }
       });
-  
+
       newPeer.on("error", (err) => {
         console.error("❌ Peer error:", err);
       });
-  
+
       setPeer(newPeer);
     } catch (error) {
       console.error("⚠️ Call error:", error);
       alert("Please allow camera and microphone permissions.");
     }
   };
-  
+
   // Optional: handle socket response to accepted call
   useEffect(() => {
     if (!socket) return;
