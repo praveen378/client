@@ -14,7 +14,7 @@ const VideoCallScreen = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { peer, setPeer } = usePeer();
-  const [streamReady, setStreamReady] = useState(false);
+
   const [remoteStream, setRemoteStream] = useState(null);
 
   const { socket } = useSelector((state) => state.socketReducer);
@@ -24,16 +24,20 @@ const VideoCallScreen = () => {
   const myVideo = useRef(null);
   const userVideo = useRef(null);
 
-  // Play remote stream when available
+  // 🧠 Attach and play remote video
   useEffect(() => {
     if (userVideo.current && remoteStream) {
+      console.log("🎥 Attaching remote stream...");
       userVideo.current.srcObject = remoteStream;
-      userVideo.current
-        .play()
-        .then(() => console.log("🔊 Remote video playing"))
-        .catch((err) =>
-          console.error("❌ Error auto-playing remote video:", err)
-        );
+
+      setTimeout(() => {
+        userVideo.current
+          .play()
+          .then(() => console.log("✅ Remote video playing"))
+          .catch((err) =>
+            console.error("❌ Error playing remote video:", err)
+          );
+      }, 300); // delay helps with DOM readiness
     }
   }, [remoteStream]);
 
@@ -41,16 +45,16 @@ const VideoCallScreen = () => {
     if (typeof isCaller !== "boolean") return;
 
     let currentPeer;
-    let streamRef;
+    let localStream;
 
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
-        streamRef = stream;
+        localStream = stream;
+
         if (myVideo.current) {
           myVideo.current.srcObject = stream;
         }
-        setStreamReady(true);
 
         const newPeer = new SimplePeer({
           initiator: isCaller,
@@ -63,7 +67,7 @@ const VideoCallScreen = () => {
 
         newPeer.on("signal", (data) => {
           if (isCaller) {
-            console.log("📤 Emitting callUser with signal:", data);
+            console.log("📤 Calling user with signal:", data);
             socket.emit("callUser", {
               signalData: data,
               toUserId: incomingCall?.from,
@@ -71,7 +75,7 @@ const VideoCallScreen = () => {
               name: "Caller",
             });
           } else {
-            console.log("📤 Sending acceptCall with signal:", data);
+            console.log("📤 Answering call with signal:", data);
             socket.emit("acceptCall", {
               signal: data,
               to: incomingCall.from,
@@ -80,43 +84,42 @@ const VideoCallScreen = () => {
         });
 
         newPeer.on("stream", (remoteStream) => {
-          console.log("📺 Remote stream received");
-          console.log("📺 Remote stream tracks:", remoteStream.getTracks());
+          console.log("📺 Remote stream received:", remoteStream);
           setRemoteStream(remoteStream);
         });
 
         newPeer.on("close", () => {
           dispatch(setCallAccepted(false));
-          setPeer(null); // ✅ don't dispatch context functions
-
           dispatch(setIncomingCall(null));
+          setPeer(null);
         });
 
-        if (isCaller) {
-          socket.on("callAccepted", (signal) => {
-            console.log("✅ Received callAccepted signal:", signal);
-            newPeer.signal(signal);
-          });
+        // Receiver handles incoming signal
+        if (!isCaller && incomingCall?.signal) {
+          console.log("📩 Signaling back to caller");
+          newPeer.signal(incomingCall.signal);
         }
 
-        if (!isCaller && incomingCall?.signal) {
-          console.log("📩 Signaling back to caller:", incomingCall.signal);
-          newPeer.signal(incomingCall.signal);
+        // Caller handles accepted signal
+        if (isCaller) {
+          socket.on("callAccepted", (signal) => {
+            console.log("✅ Call accepted signal received");
+            newPeer.signal(signal);
+          });
         }
 
         currentPeer = newPeer;
         setPeer(newPeer);
       })
       .catch((err) => {
-        console.error("Error accessing media devices", err);
+        console.error("❌ Error accessing camera/mic:", err);
       });
 
     return () => {
-      streamRef?.getTracks().forEach((track) => track.stop());
+      localStream?.getTracks().forEach((track) => track.stop());
       currentPeer?.destroy();
       dispatch(setCallAccepted(false));
-      setPeer(null); // ✅ don't dispatch context functions
-
+      setPeer(null);
     };
   }, [isCaller]);
 
@@ -136,16 +139,15 @@ const VideoCallScreen = () => {
         <video
           ref={userVideo}
           autoPlay
-          muted // 👈 Safe for autoplay. Remove this if needed.
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover bg-black"
         />
         <video
           ref={myVideo}
           autoPlay
           muted
           playsInline
-          className="absolute bottom-6 right-6 w-40 h-40 rounded-lg border-2 border-white shadow-lg z-10"
+          className="absolute bottom-6 right-6 w-40 h-40 rounded-lg border-2 border-white shadow-lg z-10 bg-black"
         />
       </div>
       <div className="p-4 flex justify-center gap-6 bg-gray-800">
