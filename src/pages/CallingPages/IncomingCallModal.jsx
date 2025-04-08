@@ -1,10 +1,16 @@
- // IncomingCallModal.jsx
+// IncomingCallModal.jsx
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCallAccepted, setCalleeId, setCalling } from "../store/socket/call.slice";
+import {
+  setCallAccepted,
+  setCalleeId,
+  setCalling,
+} from "../store/socket/call.slice";
 import { useNavigate } from "react-router-dom";
+import { usePeer } from "../../context/PeerContext";
 
 const IncomingCallModal = () => {
+  const { peer, setPeer } = usePeer();
   const dispatch = useDispatch();
   const { socket } = useSelector((state) => state.socketReducer);
   const incomingCall = useSelector((state) => state.callReducer?.incomingCall);
@@ -16,7 +22,13 @@ const IncomingCallModal = () => {
     dispatch(setCallAccepted(true));
     dispatch(setCalling(true));
     navigate("/call", { replace: true });
-    dispatch(setCalleeId(incomingCall.from)); // Make sure `from` is the correct ID
+    console.log(incomingCall);
+   
+
+    socket.emit("acceptCall", {
+      to: incomingCall.from,
+      signal: peer.signalData, // Send the signaling data
+    });
   };
 
   const handleReject = () => {
