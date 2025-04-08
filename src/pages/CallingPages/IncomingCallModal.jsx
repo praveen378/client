@@ -1,4 +1,4 @@
- import React from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCallAccepted, setIncomingCall } from "../store/socket/call.slice";
 import Peer from "simple-peer";
@@ -24,8 +24,14 @@ const IncomingCallModal = () => {
       const newPeer = new Peer({
         initiator: false,
         trickle: false,
-        stream: stream,
+        stream,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+          ],
+        },
       });
+      
 
       newPeer.on("signal", (signal) => {
         socket.emit("acceptCall", {
