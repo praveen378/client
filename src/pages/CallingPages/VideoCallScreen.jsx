@@ -115,7 +115,8 @@ const VideoCallScreen = () => {
       streamRef?.getTracks().forEach((track) => track.stop());
       currentPeer?.destroy();
       dispatch(setCallAccepted(false));
-      dispatch(setPeer(null));
+      setPeer(null); // ✅ don't dispatch context functions
+
     };
   }, [isCaller]);
 
