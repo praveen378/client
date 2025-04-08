@@ -43,6 +43,10 @@ export const {
   setCallerInfo,
   setIncomingCall,
 } = callSlice.actions;
-export const isCallerSelector = (state) =>
-  state.callReducer.calling && !state.callReducer.receivingCall;
+ export const isCallerSelector = (state) => {
+  const slice = state.callReducer;
+  if (!slice) return false;
+  return slice.calling && !slice.receivingCall;
+};
+
 export default callSlice.reducer;
