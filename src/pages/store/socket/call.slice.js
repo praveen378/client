@@ -2,7 +2,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  peer: null,
+  
   calling: false,
   receivingCall: false,
   callAccepted: false,
@@ -14,9 +14,7 @@ const callSlice = createSlice({
   name: "call",
   initialState,
   reducers: {
-    setPeer: (state, action) => {
-      state.peer = action.payload;
-    },
+ 
     setCalling: (state, action) => {
       state.calling = action.payload;
     },
@@ -38,7 +36,7 @@ const callSlice = createSlice({
 });
 
 export const {
-  setPeer,
+   
   setCalling,
   setReceivingCall,
   setCallAccepted,
