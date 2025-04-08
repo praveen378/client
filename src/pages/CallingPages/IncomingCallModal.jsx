@@ -14,42 +14,42 @@ const IncomingCallModal = () => {
   console.log("Incoming call:", incomingCall);
   if (!incomingCall) return null;
 
-  const handleAccept = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        const newPeer = new Peer({
-          initiator: false,
-          trickle: false,
-          stream: stream,
-          config: {
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              {
-                urls: "turn:your-turn-server.com:3478",
-                username: "yourUsername",
-                credential: "yourCredential",
-              },
-            ],
-          },
-        });
-
-        newPeer.on("signal", (signal) => {
-          socket.emit("acceptCall", {
-            to: incomingCall.from,
-            signal,
-          });
-        });
-
-        newPeer.on("stream", (remoteStream) => {
-          // ✅ Send remoteStream to video component (set it in context or global state)
-        });
-
-        newPeer.signal(incomingCall.signal);
-        dispatch(setPeer(newPeer));
-        dispatch(setCallAccepted(true));
-        dispatch(setIncomingCall(null));
+  const handleAccept = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
       });
+
+      const newPeer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream: stream,
+      });
+
+      newPeer.on("signal", (signal) => {
+        socket.emit("acceptCall", {
+          to: incomingCall.from,
+          signal,
+        });
+      });
+
+      newPeer.on("stream", (remoteStream) => {
+        console.log("📺 Remote stream received");
+        // Optionally store or render this stream
+      });
+
+      if (incomingCall?.signal) {
+        newPeer.signal(incomingCall.signal);
+      }
+
+      setPeer(newPeer); // ✅ context setter
+      dispatch(setCallAccepted(true));
+      dispatch(setIncomingCall(null));
+    } catch (error) {
+      console.error("❌ Error getting user media:", error);
+      alert("Failed to access camera/mic. Please check permissions.");
+    }
   };
 
   const handleReject = () => {
