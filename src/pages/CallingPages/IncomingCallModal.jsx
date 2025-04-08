@@ -7,9 +7,10 @@ const IncomingCallModal = () => {
   const { peer, setPeer } = usePeer(); // ✅ get peer from context
   const dispatch = useDispatch();
   const { socket } = useSelector((state) => state.socketReducer);
-  const { incomingCall } = useSelector((state) => state.callSlice);
- 
+  const { incomingCall } = useSelector((state) => state.callReducer);
+  // const { userProfile } = useSelector((state) => state.authReducer);
 
+  console.log("Incoming call:", incomingCall);
   if (!incomingCall) return null;
 
   const handleAccept = () => {
