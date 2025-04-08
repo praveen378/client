@@ -14,7 +14,7 @@ const IncomingCallModal = () => {
 
   const handleAccept = () => {
     dispatch(setCallAccepted(true));
-    navigate("/call", { replace: true });
+   // navigate("/call", { replace: true });
   };
 
   const handleReject = () => {
