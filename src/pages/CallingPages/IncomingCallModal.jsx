@@ -15,23 +15,26 @@ const IncomingCallModal = () => {
   if (!incomingCall) return null;
 
   const handleAccept = async () => {
+    console.log("📞 Accepting call...");
+    console.log("incomingCall", incomingCall);
+    console.log("navigator.mediaDevices", navigator.mediaDevices);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
+      console.log("🎤 Got stream:", stream);
+      console.log("🎥 Tracks:", stream.getTracks());
 
-      const newPeer = new Peer({
+      console.log("📡 Creating SimplePeer...");
+      const newPeer = new SimplePeer({
         initiator: false,
         trickle: false,
         stream,
         config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-          ],
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
         },
       });
-      
 
       newPeer.on("signal", (signal) => {
         socket.emit("acceptCall", {
@@ -56,8 +59,10 @@ const IncomingCallModal = () => {
       console.error("❌ Error getting user media:", error);
       alert("Failed to access camera/mic. Please check permissions.");
     }
+    console.log("✅ newPeer created:", newPeer);
   };
 
+ 
   const handleReject = () => {
     socket.emit("rejectCall", { to: incomingCall.from });
     dispatch(setIncomingCall(null));
