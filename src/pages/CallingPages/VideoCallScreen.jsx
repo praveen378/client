@@ -15,6 +15,7 @@ const VideoCallScreen = () => {
   const dispatch = useDispatch();
   const { peer, setPeer } = usePeer();
   const [streamReady, setStreamReady] = useState(false);
+  const [remoteStream, setRemoteStream] = useState(null);
 
   const { socket } = useSelector((state) => state.socketReducer);
   const incomingCall = useSelector((state) => state.callReducer.incomingCall);
@@ -23,8 +24,21 @@ const VideoCallScreen = () => {
   const myVideo = useRef(null);
   const userVideo = useRef(null);
 
+  // Play remote stream when available
   useEffect(() => {
-    if (typeof isCaller !== "boolean") return; // wait for isCaller to be available
+    if (userVideo.current && remoteStream) {
+      userVideo.current.srcObject = remoteStream;
+      userVideo.current
+        .play()
+        .then(() => console.log("🔊 Remote video playing"))
+        .catch((err) =>
+          console.error("❌ Error auto-playing remote video:", err)
+        );
+    }
+  }, [remoteStream]);
+
+  useEffect(() => {
+    if (typeof isCaller !== "boolean") return;
 
     let currentPeer;
     let streamRef;
@@ -52,7 +66,7 @@ const VideoCallScreen = () => {
             console.log("📤 Emitting callUser with signal:", data);
             socket.emit("callUser", {
               signalData: data,
-              toUserId: incomingCall?.from, // Replace with actual userId for caller
+              toUserId: incomingCall?.from,
               fromUserId: socket.id,
               name: "Caller",
             });
@@ -67,15 +81,8 @@ const VideoCallScreen = () => {
 
         newPeer.on("stream", (remoteStream) => {
           console.log("📺 Remote stream received");
-          if (userVideo.current) {
-            userVideo.current.srcObject = remoteStream;
-            userVideo.current
-              .play()
-              .then(() => console.log("🔊 Remote video playing"))
-              .catch((err) =>
-                console.error("❌ Error auto-playing remote video:", err)
-              );
-          }
+          console.log("📺 Remote stream tracks:", remoteStream.getTracks());
+          setRemoteStream(remoteStream);
         });
 
         newPeer.on("close", () => {
@@ -127,6 +134,7 @@ const VideoCallScreen = () => {
         <video
           ref={userVideo}
           autoPlay
+          muted // 👈 Safe for autoplay. Remove this if needed.
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         />
