@@ -67,7 +67,7 @@ const Home = () => {
     const newPeer = new Peer(undefined, {
       host: "backend-production-74c6.up.railway.app",
       port: 443,
-      path: "/peerjs",
+      path: "/",
       secure: true,
     });
 
