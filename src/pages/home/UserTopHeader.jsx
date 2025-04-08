@@ -1,7 +1,7 @@
  import React, { use, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from "../store/user/user.slice";
-import { setCalling } from "../store/socket/call.slice";
+import { setCalleeId, setCalling } from "../store/socket/call.slice";
 import { usePeer } from "../../context/PeerContext";
 import SimplePeer from "simple-peer/simplepeer.min.js"; // ✅ Add this line
 const UserTopHeader = ({ userDetails }) => {
@@ -19,6 +19,7 @@ const UserTopHeader = ({ userDetails }) => {
   };
 
   const handleCallUser = async () => {
+    dispatch(setCalleeId(userDetails._id)); // Make sure `from` is the correct ID
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
