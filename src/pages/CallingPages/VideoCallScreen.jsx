@@ -1,11 +1,15 @@
+  // VideoCallScreen.jsx
 import React, { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCallAccepted, setIncomingCall } from "../store/socket/call.slice";
+import {
+  setCallAccepted,
+  setIncomingCall,
+  setCalling,
+} from "../store/socket/call.slice";
 import { usePeer } from "../../context/PeerContext";
 import { useNavigate } from "react-router-dom";
-
-// ✅ Use browser-compatible build of SimplePeer
 import SimplePeer from "simple-peer/simplepeer.min.js";
+import { isCallerSelector } from "../store/socket/call.slice";
 
 const VideoCallScreen = () => {
   const navigate = useNavigate();
@@ -15,6 +19,7 @@ const VideoCallScreen = () => {
   const { socket } = useSelector((state) => state.socketReducer);
   const myVideo = useRef(null);
   const userVideo = useRef(null);
+  const isCaller = useSelector(isCallerSelector); // 🟢 Selector here
 
   useEffect(() => {
     let currentPeer;
@@ -24,21 +29,23 @@ const VideoCallScreen = () => {
       .getUserMedia({ video: true, audio: true })
       .then((stream) => {
         streamRef = stream;
-
         if (myVideo.current) {
           myVideo.current.srcObject = stream;
         }
 
-        // ✅ Create new SimplePeer instance if not exists
         if (!peer) {
           const newPeer = new SimplePeer({
-            initiator: true,
+            initiator: isCaller, // 🟢 Dynamically set initiator
             trickle: false,
             stream: stream,
           });
 
           newPeer.on("signal", (data) => {
-            socket.emit("callUser", { signalData: data });
+            if (isCaller) {
+              socket.emit("callUser", { signalData: data });
+            } else {
+              socket.emit("acceptCall", { signal: data });
+            }
           });
 
           newPeer.on("stream", (remoteStream) => {
@@ -54,7 +61,7 @@ const VideoCallScreen = () => {
           });
 
           currentPeer = newPeer;
-          setPeer(newPeer); // save to context
+          setPeer(newPeer);
         }
       })
       .catch((err) => {
@@ -67,16 +74,15 @@ const VideoCallScreen = () => {
       dispatch(setCallAccepted(false));
       dispatch(setPeer(null));
     };
-  }, []);
+  }, [isCaller]); // 🟢 add isCaller as a dependency
 
   const handleEndCall = () => {
     if (peer) {
       peer.destroy();
     }
-console.log("End call button clicked");
     dispatch(setCallAccepted(false));
-     dispatch(setCalling(false)); // Update global call state
-    setPeer(null); // ✅ this is from context, don't dispatch it
+    dispatch(setCalling(false));
+    setPeer(null);
     navigate("/", { replace: true });
   };
 
