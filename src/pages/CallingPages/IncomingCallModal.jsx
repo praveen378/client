@@ -28,6 +28,11 @@ const IncomingCallModal = () => {
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
+             {
+              urls: "turn:relay.example.com:3478",
+              username: "user",
+              credential: "pass",
+            },
           ],
         },
       });
