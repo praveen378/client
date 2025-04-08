@@ -47,9 +47,19 @@ const VideoCallScreen = () => {
 
         newPeer.on("signal", (data) => {
           if (isCaller) {
-            socket.emit("callUser", { signalData: data });
+            console.log("📤 Emitting callUser with signal:", data);
+            socket.emit("callUser", {
+              signalData: data,
+              toUserId: incomingCall?.from, // or target userId,
+              fromUserId: socket.id,
+              name: "Caller",
+            });
           } else {
-            socket.emit("acceptCall", { signal: data, to: incomingCall.from });
+            console.log("📤 Sending acceptCall with signal:", data);
+            socket.emit("acceptCall", {
+              signal: data,
+              to: incomingCall.from,
+            });
           }
         });
 
@@ -58,6 +68,13 @@ const VideoCallScreen = () => {
             userVideo.current.srcObject = remoteStream;
           }
         });
+
+        if (isCaller) {
+          socket.on("callAccepted", (signal) => {
+            console.log("✅ Received callAccepted signal:", signal);
+            newPeer.signal(signal); // 🔥 This is key for caller to connect!
+          });
+        }
 
         newPeer.on("close", () => {
           dispatch(setCallAccepted(false));
