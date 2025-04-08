@@ -4,16 +4,16 @@ import {
   setCallAccepted,
   setIncomingCall,
   setCalling,
+  isCallerSelector,
 } from "../store/socket/call.slice";
 import { usePeer } from "../../context/PeerContext";
 import { useNavigate } from "react-router-dom";
 import SimplePeer from "simple-peer/simplepeer.min.js";
-import { isCallerSelector } from "../store/socket/call.slice";
 
 const VideoCallScreen = () => {
   const navigate = useNavigate();
-  const { peer, setPeer } = usePeer();
   const dispatch = useDispatch();
+  const { peer, setPeer } = usePeer();
   const [streamReady, setStreamReady] = useState(false);
 
   const { socket } = useSelector((state) => state.socketReducer);
@@ -24,6 +24,8 @@ const VideoCallScreen = () => {
   const userVideo = useRef(null);
 
   useEffect(() => {
+    if (typeof isCaller !== "boolean") return; // wait for isCaller to be available
+
     let currentPeer;
     let streamRef;
 
@@ -50,7 +52,7 @@ const VideoCallScreen = () => {
             console.log("📤 Emitting callUser with signal:", data);
             socket.emit("callUser", {
               signalData: data,
-              toUserId: incomingCall?.from, // or target userId,
+              toUserId: incomingCall?.from, // Replace with actual userId for caller
               fromUserId: socket.id,
               name: "Caller",
             });
@@ -64,17 +66,17 @@ const VideoCallScreen = () => {
         });
 
         newPeer.on("stream", (remoteStream) => {
+          console.log("📺 Remote stream received");
           if (userVideo.current) {
             userVideo.current.srcObject = remoteStream;
+            userVideo.current
+              .play()
+              .then(() => console.log("🔊 Remote video playing"))
+              .catch((err) =>
+                console.error("❌ Error auto-playing remote video:", err)
+              );
           }
         });
-
-        if (isCaller) {
-          socket.on("callAccepted", (signal) => {
-            console.log("✅ Received callAccepted signal:", signal);
-            newPeer.signal(signal); // 🔥 This is key for caller to connect!
-          });
-        }
 
         newPeer.on("close", () => {
           dispatch(setCallAccepted(false));
@@ -82,7 +84,15 @@ const VideoCallScreen = () => {
           dispatch(setIncomingCall(null));
         });
 
+        if (isCaller) {
+          socket.on("callAccepted", (signal) => {
+            console.log("✅ Received callAccepted signal:", signal);
+            newPeer.signal(signal);
+          });
+        }
+
         if (!isCaller && incomingCall?.signal) {
+          console.log("📩 Signaling back to caller:", incomingCall.signal);
           newPeer.signal(incomingCall.signal);
         }
 
