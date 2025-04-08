@@ -1,5 +1,4 @@
-  // VideoCallScreen.jsx
-import React, { useEffect, useRef } from "react";
+ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setCallAccepted,
@@ -15,11 +14,14 @@ const VideoCallScreen = () => {
   const navigate = useNavigate();
   const { peer, setPeer } = usePeer();
   const dispatch = useDispatch();
+  const [streamReady, setStreamReady] = useState(false);
 
   const { socket } = useSelector((state) => state.socketReducer);
+  const incomingCall = useSelector((state) => state.callReducer.incomingCall);
+  const isCaller = useSelector(isCallerSelector);
+
   const myVideo = useRef(null);
   const userVideo = useRef(null);
-  const isCaller = useSelector(isCallerSelector); // 🟢 Selector here
 
   useEffect(() => {
     let currentPeer;
@@ -32,37 +34,43 @@ const VideoCallScreen = () => {
         if (myVideo.current) {
           myVideo.current.srcObject = stream;
         }
+        setStreamReady(true);
 
-        if (!peer) {
-          const newPeer = new SimplePeer({
-            initiator: isCaller, // 🟢 Dynamically set initiator
-            trickle: false,
-            stream: stream,
-          });
+        const newPeer = new SimplePeer({
+          initiator: isCaller,
+          trickle: false,
+          stream,
+          config: {
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+          },
+        });
 
-          newPeer.on("signal", (data) => {
-            if (isCaller) {
-              socket.emit("callUser", { signalData: data });
-            } else {
-              socket.emit("acceptCall", { signal: data });
-            }
-          });
+        newPeer.on("signal", (data) => {
+          if (isCaller) {
+            socket.emit("callUser", { signalData: data });
+          } else {
+            socket.emit("acceptCall", { signal: data, to: incomingCall.from });
+          }
+        });
 
-          newPeer.on("stream", (remoteStream) => {
-            if (userVideo.current) {
-              userVideo.current.srcObject = remoteStream;
-            }
-          });
+        newPeer.on("stream", (remoteStream) => {
+          if (userVideo.current) {
+            userVideo.current.srcObject = remoteStream;
+          }
+        });
 
-          newPeer.on("close", () => {
-            dispatch(setCallAccepted(false));
-            dispatch(setPeer(null));
-            dispatch(setIncomingCall(null));
-          });
+        newPeer.on("close", () => {
+          dispatch(setCallAccepted(false));
+          dispatch(setPeer(null));
+          dispatch(setIncomingCall(null));
+        });
 
-          currentPeer = newPeer;
-          setPeer(newPeer);
+        if (!isCaller && incomingCall?.signal) {
+          newPeer.signal(incomingCall.signal);
         }
+
+        currentPeer = newPeer;
+        setPeer(newPeer);
       })
       .catch((err) => {
         console.error("Error accessing media devices", err);
@@ -74,7 +82,7 @@ const VideoCallScreen = () => {
       dispatch(setCallAccepted(false));
       dispatch(setPeer(null));
     };
-  }, [isCaller]); // 🟢 add isCaller as a dependency
+  }, [isCaller]);
 
   const handleEndCall = () => {
     if (peer) {
@@ -87,29 +95,30 @@ const VideoCallScreen = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 text-white">
-      <h1 className="text-2xl mb-4">Live Call</h1>
-      <div className="flex gap-6">
+    <div className="fixed inset-0 bg-gray-900 flex flex-col z-50">
+      <div className="flex-grow relative">
+        <video
+          ref={userVideo}
+          autoPlay
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
         <video
           ref={myVideo}
           autoPlay
           muted
           playsInline
-          className="w-64 rounded-lg shadow"
-        />
-        <video
-          ref={userVideo}
-          autoPlay
-          playsInline
-          className="w-64 rounded-lg shadow"
+          className="absolute bottom-6 right-6 w-40 h-40 rounded-lg border-2 border-white shadow-lg z-10"
         />
       </div>
-      <button
-        onClick={handleEndCall}
-        className="mt-6 px-4 py-2 bg-red-600 hover:bg-red-700 rounded"
-      >
-        End Call
-      </button>
+      <div className="p-4 flex justify-center gap-6 bg-gray-800">
+        <button
+          onClick={handleEndCall}
+          className="px-6 py-3 text-white bg-red-600 hover:bg-red-700 rounded-full shadow-xl"
+        >
+          End Call
+        </button>
+      </div>
     </div>
   );
 };
