@@ -6,6 +6,7 @@ import { PeerProvider } from "./context/PeerContext"; // create this file
 import Login from "./pages/authentication/Login";
 import SignUp from "./pages/authentication/SignUp";
 import { store } from "./pages/store/store";
+import VideoCallScreen from "./pages/CallingPages/VideoCallScreen";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import { useEffect } from "react";
@@ -40,6 +41,7 @@ function AppContent() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/call" element={<VideoCallScreen />} />
       </Routes>
     </>
   );
