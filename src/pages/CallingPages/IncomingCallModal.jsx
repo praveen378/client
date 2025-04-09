@@ -25,7 +25,7 @@ const IncomingCallModal = () => {
     console.log(incomingCall);
    
 
- 
+  }
 
   const handleReject = () => {
     socket.emit("rejectCall", { to: incomingCall.from });
