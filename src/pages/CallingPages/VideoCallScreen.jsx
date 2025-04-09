@@ -8,7 +8,7 @@ import {
 } from "../store/socket/call.slice";
 import { usePeer } from "../../context/PeerContext";
 import { useNavigate } from "react-router-dom";
-import SimplePeer from "simple-peer/simplepeer.min.js";
+import SimplePeer from "simple-peer";
 // ...imports remain the same
 
 const VideoCallScreen = () => {
