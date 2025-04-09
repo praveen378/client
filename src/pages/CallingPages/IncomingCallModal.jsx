@@ -25,11 +25,7 @@ const IncomingCallModal = () => {
     console.log(incomingCall);
    
 
-    socket.emit("acceptCall", {
-      to: incomingCall.from,
-      signal: peer.signalData, // Send the signaling data
-    });
-  };
+ 
 
   const handleReject = () => {
     socket.emit("rejectCall", { to: incomingCall.from });
