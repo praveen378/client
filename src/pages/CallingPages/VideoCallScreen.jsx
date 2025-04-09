@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setCallAccepted,
@@ -9,9 +9,10 @@ import {
 import { usePeer } from "../../context/PeerContext";
 import { useNavigate } from "react-router-dom";
 import SimplePeer from "simple-peer/simplepeer.min.js";
- // ...imports remain the same
+// ...imports remain the same
 
 const VideoCallScreen = () => {
+  const [connectionStatus, setStatus] = useState("connecting");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { peer, setPeer } = usePeer();
@@ -34,14 +35,11 @@ const VideoCallScreen = () => {
         remoteStream.getVideoTracks()
       );
       console.log("🚨 Remote stream is active:", remoteStream.active);
-
-      setTimeout(() => {
-        userVideo.current.srcObject = remoteStream;
-        userVideo.current
-          .play()
-          .then(() => console.log("✅ Delayed remote video playing"))
-          .catch((err) => console.error("❌ Delayed play error:", err));
-      }, 500);
+      userVideo.current.srcObject = remoteStream;
+      userVideo.current
+        .play()
+        .then(() => console.log("✅ Delayed remote video playing"))
+        .catch((err) => console.error("❌ Delayed play error:", err));
     }
   }, [remoteStream]);
 
@@ -123,6 +121,10 @@ const VideoCallScreen = () => {
           newPeer.signal(incomingCall.signal);
         }
 
+        // Inside peer setup
+        newPeer.on("connect", () => setStatus("connected"));
+        newPeer.on("error", () => setStatus("failed"));
+
         currentPeer = newPeer;
         setPeer(newPeer);
       })
@@ -179,6 +181,7 @@ const VideoCallScreen = () => {
           ref={userVideo}
           autoPlay
           playsInline
+          onLoadedMetadata={() => userVideo.current.play()}
           className="absolute inset-0 w-full h-full object-cover"
         />
         <video
@@ -195,6 +198,9 @@ const VideoCallScreen = () => {
           <p>📞 Call from: {incomingCall?.from}</p>
           <p>🎥 Remote stream: {remoteStream ? "Yes" : "No"}</p>
           <p>🎬 Tracks: {remoteStream?.getTracks()?.length ?? 0}</p>
+        </div>
+        <div className="absolute top-4 left-4 text-white text-sm z-50 bg-black/70 p-2 rounded">
+          Status: {connectionStatus}
         </div>
       </div>
 
