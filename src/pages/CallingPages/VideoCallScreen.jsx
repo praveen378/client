@@ -1,4 +1,4 @@
- import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setCallAccepted,
@@ -124,6 +124,21 @@ const VideoCallScreen = () => {
         // Inside peer setup
         newPeer.on("connect", () => setStatus("connected"));
         newPeer.on("error", () => setStatus("failed"));
+        newPeer.on("iceCandidate", (candidate) => {
+          console.log("ICE Candidate:", candidate);
+        });
+
+        newPeer.on("iceConnectionStateChange", (state) => {
+          console.log("ICE Connection State:", state);
+        });
+
+        newPeer.on("signal", (data) => {
+          console.log("Signaling Data:", data.type);
+        });
+
+        newPeer.on("error", (err) => {
+          console.error("Peer Error:", err);
+        });
 
         currentPeer = newPeer;
         setPeer(newPeer);
@@ -139,6 +154,21 @@ const VideoCallScreen = () => {
       setPeer(null);
     };
   }, [isCaller]);
+
+  const [connectionState, setConnectionState] = useState('');
+
+useEffect(() => {
+  if (peer) {
+    peer.on('connect', () => {
+      console.log('Peer connected!');
+      setConnectionState('connected');
+    });
+    
+    peer.on('close', () => {
+      setConnectionState('disconnected');
+    });
+  }
+}, [peer]);
 
   // ✅ Add this block below peer setup
   useEffect(() => {
