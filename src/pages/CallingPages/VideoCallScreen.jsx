@@ -11,7 +11,9 @@ import { off } from "process";
 import toast from "react-hot-toast";
 
 const VideoCallScreen = () => {
-  const { userProfile } = useSelector((state) => state.userReducer);
+  const { selectedUser, userProfile } = useSelector(
+    (state) => state.userReducer
+  );
   const { socket } = useSelector((state) => state.socketReducer);
   const incomingCall = useSelector((state) => state.callReducer.incomingCall);
   const callAccepted = useSelector((state) => state.callReducer.callAccepted);
@@ -295,7 +297,7 @@ const VideoCallScreen = () => {
     };
     const callRejected = () => {
       console.log("❌ Call was rejected by remote");
-      toast.error(`Call Rjected! by ${userProfile?.profile?.fullName}`, {
+      toast.error(`Call Rjected! by ${selectedUser?.fullName}`, {
         icon: "🥹",
       }); // ✅ Show toast notification
       dispatch(setCallAccepted(false));
